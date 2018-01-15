@@ -12,7 +12,7 @@ class Cube(object):
 		self.paper_author = cube.paper_author
 
 		for venue, papers in cube.cell_venue.items():
-			self.cell_venue[re.sub(', ', '', venue)] = set(papers)
+			self.cell_venue[re.sub('[, ]', '', venue)] = set(papers)
 		for year, papers in cube.cell_year_one.items():
 			self.cell_year[year] = set(papers)
 
@@ -30,7 +30,7 @@ class Cube(object):
 
 		with open('data/cell.txt', 'w') as f:
 			for id, cell in self.id_to_cell.items():
-				f.write(str(id) + '\t' + cell[0] + ',' + str(cell[1]))
+				f.write(str(id) + '\t' + cell[0] + ',' + str(cell[1]) + '\n')
 
 if __name__ == '__main__':
 	with open('data/step1.pkl', 'rb') as f:
