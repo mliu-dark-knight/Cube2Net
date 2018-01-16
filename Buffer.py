@@ -13,9 +13,9 @@ class Buffer(object):
 		with open(self.params.replay_buffer_file, 'w') as f:
 			for num_cell in range(10, 200, 1):
 				state, action, next, reward = self.generate_one(num_cell)
-				f.write(' '.join(map(lambda cell: cell[0] + ',' + str(cell[1]), state)) + '\t' + \
-				        action[0] + ',' + str(action[1]) + '\t' + \
-				        ' '.join(map(lambda cell: cell[0] + ',' + str(cell[1]), next)) + '\t' + \
+				f.write(','.join(map(lambda cell: str(self.cube.cell_to_id[cell]), state)) + '\t' + \
+				        str(self.cube.cell_to_id[action]) + '\t' + \
+				        ','.join(map(lambda cell: str(self.cube.cell_to_id[cell]), next)) + '\t' + \
 				        str(reward) + '\n')
 
 	def generate_one(self, num_cell):

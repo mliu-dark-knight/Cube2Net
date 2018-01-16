@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 
 
 class Environment(object):
@@ -14,46 +15,52 @@ class Environment(object):
 		with open(self.params.cell_file) as f:
 			for line in f:
 				splits = line.rstrip().split('\t')
-				id, venue, year = int(splits[0]), splits[1].split(',')[0], int(splits[1].split(',')[1])
+				id, venue, year = int(splits[0]), splits[1].split('|')[0], int(splits[1].split('|')[1])
 				self.cell_to_id[(venue, year)] = id
 				self.id_to_cell[id] = (venue, year)
 
 	def load_embed(self):
-		self.v_embed, self.y_embed = {}, {}
+		v_embed, y_embed = {}, {}
 		with open(self.params.venue_file) as f:
 			for line in f:
 				line = line.rstrip().split('\t')
-				self.v_embed[line[0]] = np.array(map(float, line[1].split()))
+				v_embed[line[0]] = np.array(map(float, line[1].split()))
 		with open(self.params.year_file) as f:
 			for line in f:
 				line = line.rstrip().split('\t')
-				self.y_embed[int(line[0])] = np.array(map(float, line[1].split()))
+				y_embed[int(line[0])] = np.array(map(float, line[1].split()))
+
+		cell_embed = []
+		for id in range(len(self.id_to_cell)):
+			cell = self.id_to_cell[id]
+			cell_embed.append(np.concatenate((v_embed[cell[0]], y_embed[cell[1]])))
+		self.cell_embed = np.array(cell_embed)
 
 	def load_replay_buffer(self):
-		self.replay_buffer = []
+		replay_buffer = []
 		with open(self.params.replay_buffer_file) as f:
 			for line in f:
 				splits = line.rstrip().split('\t')
-				state = map(lambda cell: (cell.split()[0], int(cell.split()[1])), splits[0].split())
-				action = (splits[1].split()[0], int(splits[1].split()[1]))
-				next = map(lambda cell: (cell.split()[0], int(cell.split()[1])), splits[2].split())
+				state = np.array(list(map(lambda cell: int(cell), splits[0].split(','))))
+				action = int(splits[1])
+				next = np.array(list(map(lambda cell: int(cell), splits[2].split(','))))
 				reward = float(splits[3])
-				self.replay_buffer.append((state, action, next, reward))
+				replay_buffer.append((state, action, next, reward))
+		self.replay_buffer = np.array(replay_buffer)
 
 	def sample(self):
 		return self.replay_buffer[np.random.choice(len(self.replay_buffer), self.params.batch_size)]
 
-	# state is a set of cell ids
+	# state is an array of cell ids
 	def next_states(self, state):
-		actions = set(self.id_to_cell.keys()) - state
+		state = set(state)
+		actions = self.id_to_cell.keys()
 		states = []
 		for action in actions:
-			states.append(state | action)
-		return states
+			next = deepcopy(state)
+			next.add(action)
+			states.append(np.array(list(next)))
+		return np.array(states)
 
 	def state_embed(self, state):
-		embed = []
-		for cell in state:
-			v, y = cell
-			embed.append(np.concatenate((self.v_embed[v], self.y_embed[y])))
-		return np.mean(np.array(embed))
+		return np.mean(self.cell_embed[state], axis=0)
