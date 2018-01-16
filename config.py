@@ -7,8 +7,10 @@ def parse_args():
 	parser.add_argument('--learning_rate', type=float, default=1e-3, help=None)
 	parser.add_argument('--embed_dim', type=int, default=64, help=None)
 	parser.add_argument('--batch_size', type=int, default=100, help=None)
-	parser.add_argument('--epoch', type=int, default=10, help=None)
-	parser.add_argument('--k_step', type=int, default=10, help=None)
+	parser.add_argument('--epoch', type=int, default=1, help=None)
+	parser.add_argument('--k_step', type=int, default=1, help=None)
+	parser.add_argument('--initial_state_size', type=int, default=100, help=None)
+	parser.add_argument('--max_state_size', type=int, default=110, help=None)
 	return parser.parse_args()
 
 
