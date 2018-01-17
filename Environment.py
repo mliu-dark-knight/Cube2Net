@@ -1,5 +1,5 @@
 import numpy as np
-from Cube import *
+from Cube import Cube
 
 
 class Environment(object):
@@ -78,5 +78,5 @@ class Environment(object):
 
 	def total_reward(self, state):
 		if self.cube is None:
-			self.cube = load_cube(self.params.cube_file)
-		return self.cube.total_reward(state)
+			self.cube = Cube.load_cube(self.params.cube_file)
+		return self.cube.total_reward([self.id_to_cell[id] for id in state])

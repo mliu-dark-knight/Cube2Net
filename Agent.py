@@ -72,7 +72,7 @@ class Agent(object):
 				                               self.next_embed: np.array(feed_next),
 				                               self.reward: np.array(feed_reward)})
 
-	def play(self, sess):
+	def plan(self, sess):
 		state = self.environment.initial_state()
 		while True:
 			feed_state = np.expand_dims(self.environment.state_embed(state), axis=0)
@@ -82,6 +82,6 @@ class Agent(object):
 					action = int(a)
 					break
 			if self.environment.terminal_action(action) or self.environment.terminal_state(state):
-				print('total reward: %f', self.environment.total_reward(state))
+				print('total reward: %f' % self.environment.total_reward(state))
 				break
 			state = self.environment.next_state(state, action)

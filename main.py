@@ -8,4 +8,4 @@ if __name__ == '__main__':
 	agent = Agent(args, environment)
 	with tf.Session() as sess:
 		agent.train(sess)
-		agent.play(sess)
+		agent.plan(sess)
