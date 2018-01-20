@@ -1,6 +1,5 @@
-from Agent import *
-from Buffer import *
-from Environment import *
+from common.Buffer import *
+from common.Environment import *
 
 if __name__ == '__main__':
 	environment = Environment(args)

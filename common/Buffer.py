@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-from config import *
+from common.config import *
 from Cube import Cube
 
 
