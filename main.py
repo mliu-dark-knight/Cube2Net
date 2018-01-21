@@ -1,4 +1,4 @@
-from Buffer import *
+from common.Buffer import *
 
 if __name__ == '__main__':
 	if args.model == 'DQN':

@@ -6,9 +6,9 @@ from Cube import Cube
 class Base(object):
 	def __init__(self, params):
 		self.params = params
-		self.cube = None
 		self.load_cell()
 		self.load_embed()
+		self.cube = Cube.load_cube(self.params.cube_file)
 
 	def load_cell(self):
 		self.cell_to_id = {}
@@ -41,6 +41,4 @@ class Base(object):
 		return np.mean(self.cell_embed[state], axis=0)
 
 	def total_reward(self, state):
-		if self.cube is None:
-			self.cube = Cube.load_cube(self.params.cube_file)
 		return self.cube.total_reward([self.id_to_cell[id] for id in state])
