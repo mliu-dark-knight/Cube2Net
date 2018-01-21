@@ -1,6 +1,6 @@
 import numpy as np
 
-from common.Cube import Cube
+from Cube import Cube
 
 
 class Base(object):
@@ -33,6 +33,9 @@ class Base(object):
 			cell_embed.append(np.insert(v_embed[cell[0]], 0, -0.5 + float(cell[1] - self.params.start_year)
 			                            / float(self.params.end_year - self.params.start_year)))
 		self.cell_embed = np.array(cell_embed)
+
+	def initial_state(self):
+		return set(list(np.random.choice(len(self.id_to_cell), self.params.initial_state_size, replace=False)))
 
 	def state_embed(self, state):
 		return np.mean(self.cell_embed[state], axis=0)
