@@ -1,6 +1,4 @@
-import numpy as np
-from common.Cube import Cube
-from common.Environment import Base
+from common.Environment import *
 
 
 class Environment(Base):
