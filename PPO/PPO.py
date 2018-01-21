@@ -99,4 +99,4 @@ class PPO(object):
 			for i, state in enumerate(batch_states):
 				state.add(action[i])
 				feed_state[i] = self.environment.state_embed(list(state))
-		return np.average(np.array([self.environment.total_reward(s) for s in batch_states], self.params.measure))
+		return np.average(np.array([self.environment.total_reward(s) for s in batch_states]))
