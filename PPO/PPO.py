@@ -1,6 +1,8 @@
 import numpy as np
+from copy import deepcopy
 from NN import *
 from tqdm import tqdm
+from random import shuffle
 
 
 class PPO(object):
@@ -36,13 +38,11 @@ class PPO(object):
 		ratio = tf.exp(0.5 * tf.reduce_sum(tf.squared_difference(action, policy_mean_old), axis=-1) -
 		               0.5 * tf.reduce_sum(tf.squared_difference(action, policy_mean), axis=-1))
 		surr_loss = tf.minimum(ratio * advantage, tf.clip_by_value(ratio, 1.0 - self.params.clip_epsilon, 1.0 + self.params.clip_epsilon) * advantage)
-		surr_loss = -tf.reduce_sum(surr_loss, axis=-1)
-		v_loss = tf.reduce_sum(tf.squared_difference(reward_to_go, value), axis=-1)
+		surr_loss = -tf.reduce_mean(surr_loss, axis=-1)
+		v_loss = tf.reduce_mean(tf.squared_difference(reward_to_go, value), axis=-1)
 
-		critic_optimizer = tf.train.AdamOptimizer(self.params.learning_rate)
-		actor_optimizer = tf.train.AdamOptimizer(self.params.learning_rate)
-		self.critic_step = critic_optimizer.minimize(v_loss)
-		self.actor_step = actor_optimizer.minimize(surr_loss)
+		optimizer = tf.train.AdamOptimizer(self.params.learning_rate)
+		self.step = optimizer.minimize(surr_loss + v_loss)
 
 	def build_plan(self, policy_mean):
 		policy = tf.distributions.Normal(policy_mean, tf.ones([self.params.embed_dim], tf.float32))
@@ -57,7 +57,7 @@ class PPO(object):
 		return hidden
 
 	def value(self, hidden):
-		return fully_connected(hidden, 1, 'policy_value_o')
+		return fully_connected(hidden, 1, 'policy_value_o', activation='linear')
 
 	def policy(self, hidden):
 		return fully_connected(hidden, self.params.embed_dim, 'policy_o')
@@ -65,30 +65,33 @@ class PPO(object):
 	# the number of trajectories sampled is equal to batch size
 	def collect_trajectory(self, sess):
 		ret_states, ret_actions = [], []
-		batch_states = [self.environment.initial_state() for _ in range(self.params.batch_size)]
+		initial_states = [self.environment.initial_state() for _ in range(self.params.batch_size)]
+		batch_states = [deepcopy(state) for state in initial_states]
 		feed_state = np.array([self.environment.state_embed(list(s)) for s in batch_states])
 		batch_actions = []
 		for i in range(self.params.trajectory_length):
 			ret_states.append(feed_state)
 			action = sess.run(self.decision, feed_dict={self.state: feed_state})
-			ret_actions.append(action)
-			batch_actions.append(list(action))
+			batch_actions.append(action)
 			for i, state in enumerate(batch_states):
 				state.add(action[i])
 				feed_state[i] = self.environment.state_embed(list(state))
-		ret_rewards = [self.environment.trajectory_reward(s, a) for s, a in zip(batch_states, batch_actions)]
-		return zip(ret_states, ret_actions, ret_rewards)
+		ret_actions = np.array(batch_actions)
+		batch_actions = list(np.transpose(ret_actions))
+		ret_rewards = np.transpose(np.array([self.environment.trajectory_reward(s, a) for s, a in zip(initial_states, batch_actions)]))
+		return np.concatenate(ret_states, axis=0), np.concatenate(ret_actions, axis=0), np.concatenate(ret_rewards, axis=0)
 
 	def train(self, sess):
 		sess.run(tf.global_variables_initializer())
 		for _ in tqdm(range(self.params.epoch), ncols=100):
-			trajectories = self.collect_trajectory(sess)
-			for _ in tqdm(range(self.params.critic_step), ncols=100):
-				for state, action, reward_to_go in trajectories:
-					sess.run(self.critic_step, feed_dict={self.state: state, self.reward_to_go: reward_to_go})
-			for _ in tqdm(range(self.params.actor_step), ncols=100):
-				for state, action, reward_to_go in trajectories:
-					sess.run(self.actor_step, feed_dict={self.state: state, self.action: action, self.reward_to_go : reward_to_go})
+			states, actions, rewards = self.collect_trajectory(sess)
+			indices = range(self.params.trajectory_length * self.params.batch_size)
+			shuffle(indices)
+			batch_size = self.params.trajectory_length * self.params.batch_size / self.params.step
+			for i in tqdm(range(self.params.step), ncols=100):
+				batch_indices = indices[i * batch_size : (i + 1) * batch_size]
+				sess.run(self.step,
+				         feed_dict={self.state: states[batch_indices], self.action: actions[batch_indices], self.reward_to_go: rewards[batch_indices]})
 			sess.run(self.assign_ops)
 
 	def plan(self, sess):
