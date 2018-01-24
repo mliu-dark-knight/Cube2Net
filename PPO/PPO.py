@@ -29,14 +29,16 @@ class PPO(object):
 			assign_ops.append(tf.assign(old, new))
 		self.assign_ops = tf.group(*assign_ops)
 
-		self.build_train(tf.nn.embedding_lookup(self.cell_embed, self.action), self.reward_to_go, value, policy, policy_old)
-		self.decision = self.build_plan(policy)
+		# use scaled std of embedding vectors as policy std
+		sigma = tf.Variable(self.environment.sigma / 2.0, trainable=False, dtype=tf.float32)
+		self.build_train(tf.nn.embedding_lookup(self.cell_embed, self.action), self.reward_to_go, value, policy, policy_old, sigma)
+		self.decision = self.build_plan(policy, sigma)
 
-	def build_train(self, action, reward_to_go, value, policy_mean, policy_mean_old):
+	def build_train(self, action, reward_to_go, value, policy_mean, policy_mean_old, sigma):
 		advantage = reward_to_go - tf.stop_gradient(value)
 		# Gaussian policy with identity matrix as covariance mastrix
-		ratio = tf.exp(0.5 * tf.reduce_sum(tf.squared_difference(action, policy_mean_old), axis=-1) -
-		               0.5 * tf.reduce_sum(tf.squared_difference(action, policy_mean), axis=-1))
+		ratio = tf.exp(0.5 * tf.reduce_sum(tf.square((action - policy_mean_old) * sigma), axis=-1) -
+		               0.5 * tf.reduce_sum(tf.square((action - policy_mean) * sigma), axis=-1))
 		surr_loss = tf.minimum(ratio * advantage, tf.clip_by_value(ratio, 1.0 - self.params.clip_epsilon, 1.0 + self.params.clip_epsilon) * advantage)
 		surr_loss = -tf.reduce_mean(surr_loss, axis=-1)
 		v_loss = tf.reduce_mean(tf.squared_difference(reward_to_go, value), axis=-1)
@@ -44,8 +46,8 @@ class PPO(object):
 		optimizer = tf.train.AdamOptimizer(self.params.learning_rate)
 		self.step = optimizer.minimize(surr_loss + v_loss)
 
-	def build_plan(self, policy_mean):
-		policy = tf.distributions.Normal(policy_mean, tf.ones([self.params.embed_dim], tf.float32))
+	def build_plan(self, policy_mean, sigma):
+		policy = tf.distributions.Normal(policy_mean, sigma)
 		action_embed = policy.sample()
 		return tf.argmin(tf.reduce_sum(
 			tf.squared_difference(tf.expand_dims(action_embed, axis=1), tf.expand_dims(self.cell_embed, axis=0)), axis=-1), axis=-1)
