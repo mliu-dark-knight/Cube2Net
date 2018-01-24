@@ -19,11 +19,13 @@ class Baseline(object):
 		return self.cube.total_reward([self.cube.id_to_cell[id] for id in final], self.params.measure)
 
 	def greedy_worker(self, state, num_worker, worker_id, queue):
+		local_queue = []
 		for a in self.cube.id_to_cell:
 			if a not in state and a % num_worker == worker_id:
-				state.add(a)
-				queue.put((next, self.cube.total_reward([self.cube.id_to_cell[id] for id in state], self.params.measure)))
-				state.remove(a)
+				state_copy = deepcopy(state)
+				state_copy.add(a)
+				local_queue.append((state_copy, self.cube.total_reward([self.cube.id_to_cell[id] for id in state_copy], self.params.measure)))
+		queue.put(max(local_queue, key=lambda e: e[1]))
 
 	def greedy_baseline(self, state):
 		num_worker = 4
