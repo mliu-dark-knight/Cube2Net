@@ -44,7 +44,7 @@ class PPO(object):
 		v_loss = tf.reduce_mean(tf.squared_difference(reward_to_go, value), axis=-1)
 
 		optimizer = tf.train.AdamOptimizer(self.params.learning_rate)
-		self.step = optimizer.minimize(surr_loss + v_loss)
+		self.step = optimizer.minimize(surr_loss + self.params.c_value * v_loss)
 
 	def build_plan(self, policy_mean, sigma):
 		policy = tf.distributions.Normal(policy_mean, sigma)
