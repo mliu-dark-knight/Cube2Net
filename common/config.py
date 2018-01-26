@@ -30,6 +30,7 @@ def init_dir(args):
 	args.cube_file = args.data_dir + 'cube.pkl'
 	args.cell_file = args.data_dir + 'cell.txt'
 	args.replay_buffer_file = args.data_dir + 'buffer.txt'
+	args.test_file = args.data_dir + 'name-label.txt'
 
 args = parse_args()
 init_dir(args)

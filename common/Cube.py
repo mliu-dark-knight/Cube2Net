@@ -1,9 +1,21 @@
 import itertools
 import pickle
 import networkx as nx
+import numpy as np
 
 
 class Cube(object):
+	def initial_state(self, path):
+		authors = set()
+		with open(path) as f:
+			for line in f:
+				authors.add(line.rstrip().split('\t')[0])
+		ids = []
+		for id, cell_authors in self.id_to_author.items():
+			if bool(cell_authors & authors):
+				ids.append(id)
+		return np.array(ids)
+
 	# state is a set of cells, action is a single cell
 	def reward(self, state, action, func):
 		G1, G2 = nx.Graph(), nx.Graph()
