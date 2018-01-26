@@ -28,7 +28,7 @@ class Baseline(object):
 		queue.put(max(local_queue, key=lambda e: e[1]))
 
 	def greedy_baseline(self, state):
-		num_worker = 4
+		num_worker = self.params.num_process
 		next = deepcopy(state)
 		for _ in range(self.params.trajectory_length):
 			queue = Queue()

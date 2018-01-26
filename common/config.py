@@ -21,6 +21,7 @@ def parse_args():
 	parser.add_argument('--intersect_threshold', type=int, default=100, help=None)
 	parser.add_argument('--start_year', type=int, default=1954, help=None)
 	parser.add_argument('--end_year', type=int, default=2018, help=None)
+	parser.add_argument('--num_process', type=int, default=8, help='Number of subprocesses')
 	return parser.parse_args()
 
 

@@ -14,7 +14,7 @@ class Environment(Base):
 					queue.put((state_embed, action, np.array(self.trajectory_reward(initial_state, action))))
 
 		assert len(state_embeds) == len(initial_states) and len(initial_states) == len(actions)
-		num_process = 4
+		num_process = self.params.num_process
 		queue = Queue()
 		processes = []
 		for id in range(num_process):
