@@ -11,6 +11,6 @@ if __name__ == '__main__':
 		papers = cube.cell_venue[v] & cube.cell_year[y]
 		for paper in papers:
 			for author in cube.paper_author[paper]:
-				cube.id_to_author[id].add(author.replace(' ', '-'))
+				cube.id_to_author[id].add(author.replace(' ', '_'))
 	with open(args.cube_file, 'wb') as f:
 		pickle.dump(cube, f)

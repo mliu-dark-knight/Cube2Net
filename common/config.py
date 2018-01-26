@@ -17,6 +17,7 @@ def parse_args():
 	parser.add_argument('--k_step', type=int, default=10, help=None)
 	parser.add_argument('--step', type=int, default=1, help=None)
 	parser.add_argument('--initial_state_size', type=int, default=1, help=None)
+	parser.add_argument('--intersect_threshold', type=int, default=10, help=None)
 	parser.add_argument('--start_year', type=int, default=1954, help=None)
 	parser.add_argument('--end_year', type=int, default=2018, help=None)
 	return parser.parse_args()

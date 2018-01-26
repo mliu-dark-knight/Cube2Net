@@ -11,7 +11,7 @@ class Baseline(object):
 		self.cube = Cube.load_cube(args.cube_file)
 
 	def initial_state(self):
-		return self.cube.initial_state(self.params.test_file)
+		return self.cube.initial_state(self.params.test_file, self.params.intersect_threshold)
 
 	def random_baseline(self, state):
 		actions = set(list(np.random.choice(len(self.cube.id_to_cell), self.params.trajectory_length, replace=False)))
