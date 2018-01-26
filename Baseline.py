@@ -51,4 +51,4 @@ if __name__ == '__main__':
 	baseline = Baseline(args)
 	state = baseline.initial_state()
 	print('random baseline: %f' % baseline.random_baseline(state))
-	print('greedy baseline: %f' % baseline.greedy_baseline(state))
+	# print('greedy baseline: %f' % baseline.greedy_baseline(state))

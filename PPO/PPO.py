@@ -66,8 +66,8 @@ class PPO(object):
 
 	# the number of trajectories sampled is equal to batch size
 	def collect_trajectory(self, sess):
-		ret_states, ret_actions = [], []
-		initial_states = [self.environment.initial_state() for _ in range(self.params.batch_size)]
+		ret_states = []
+		initial_states = [self.environment.initial_state()] * self.params.batch_size
 		batch_states = [deepcopy(state) for state in initial_states]
 		feed_state = np.array([self.environment.state_embed(list(s)) for s in batch_states])
 		batch_actions = []
@@ -78,10 +78,9 @@ class PPO(object):
 			for i, state in enumerate(batch_states):
 				state.add(action[i])
 				feed_state[i] = self.environment.state_embed(list(state))
-		ret_actions = np.array(batch_actions)
-		batch_actions = list(np.transpose(ret_actions))
-		ret_rewards = np.transpose(np.array([self.environment.trajectory_reward(s, a) for s, a in zip(initial_states, batch_actions)]))
-		return np.concatenate(ret_states, axis=0), np.concatenate(ret_actions, axis=0), np.concatenate(ret_rewards, axis=0)
+		ret_states = list(np.transpose(np.array(ret_states), (1, 0, 2)))
+		batch_actions = list(np.transpose(batch_actions))
+		return self.environment.reward_multiprocessing(ret_states, initial_states, batch_actions)
 
 	def train(self, sess):
 		sess.run(tf.global_variables_initializer())
