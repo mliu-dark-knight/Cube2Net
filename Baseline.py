@@ -9,6 +9,20 @@ class Baseline(object):
 	def __init__(self, params):
 		self.params = params
 		self.cube = Cube.load_cube(args.cube_file)
+		self.load_embed()
+
+	def load_embed(self):
+		v_embed = {}
+		with open(self.params.venue_file) as f:
+			for line in f:
+				line = line.rstrip().split('\t')
+				v_embed[line[0]] = np.array(map(float, line[1].split()))
+		cell_embed = []
+		for id in range(len(self.cube.id_to_cell)):
+			cell = self.cube.id_to_cell[id]
+			cell_embed.append(np.insert(v_embed[cell[0]], 0, -0.5 + float(cell[1] - self.params.start_year)
+			                            / float(self.params.end_year - self.params.start_year)))
+		self.cell_embed = np.array(cell_embed)
 
 	def initial_state(self):
 		return self.cube.initial_state(self.params.test_file, self.params.intersect_threshold)
@@ -18,23 +32,37 @@ class Baseline(object):
 		final = state | actions
 		return self.cube.total_reward([self.cube.id_to_cell[id] for id in final], self.params.measure)
 
-	def greedy_worker(self, state, num_worker, worker_id, queue):
+	def greedy_worker(self, state, candidates, num_worker, worker_id, queue):
 		local_queue = []
-		for a in self.cube.id_to_cell:
-			if a not in state and a % num_worker == worker_id:
+		for idx, cell_id in enumerate(candidates):
+			if cell_id not in state and idx % num_worker == worker_id:
 				state_copy = deepcopy(state)
-				state_copy.add(a)
+				state_copy.add(cell_id)
 				local_queue.append((state_copy, self.cube.total_reward([self.cube.id_to_cell[id] for id in state_copy], self.params.measure)))
-		queue.put(max(local_queue, key=lambda e: e[1]))
+		if len(local_queue) > 0:
+			queue.put(max(local_queue, key=lambda e: e[1]))
 
-	def greedy_baseline(self, state):
+	def embedding_worker(self, state, candidates, num_worker, worker_id, queue):
+		state_embed = np.array([self.cell_embed[id] for id in state])
+		local_queue = []
+		for idx, cell_id in enumerate(candidates):
+			if cell_id not in state and idx % num_worker == worker_id:
+				state_copy = deepcopy(state)
+				state_copy.add(cell_id)
+				local_queue.append((state_copy, np.amin(np.linalg.norm(self.cell_embed[cell_id] - state_embed, ord=2, axis=1))))
+		if len(local_queue) > 0:
+			queue.put(min(local_queue, key=lambda e: e[1]))
+
+	def greedy_baseline(self, state, num_candidate, embedding=False):
 		num_worker = self.params.num_process
 		next = deepcopy(state)
 		for _ in range(self.params.trajectory_length):
+			candidates = list(np.random.choice(len(self.cube.id_to_cell), num_candidate, replace=False))
 			queue = Queue()
 			processes = []
 			for id in range(num_worker):
-				process = Process(target=self.greedy_worker, args=(next, num_worker, id, queue))
+				process = Process(target=self.embedding_worker if embedding else self.greedy_worker,
+				                  args=(next, candidates, num_worker, id, queue))
 				processes.append(process)
 				process.start()
 			for process in processes:
@@ -51,4 +79,5 @@ if __name__ == '__main__':
 	baseline = Baseline(args)
 	state = baseline.initial_state()
 	print('random baseline: %f' % baseline.random_baseline(state))
-	print('greedy baseline: %f' % baseline.greedy_baseline(state))
+	print('greedy embedding baseline: %f' % baseline.greedy_baseline(state, args.baseline_candidate, embedding=True))
+	print('greedy baseline: %f' % baseline.greedy_baseline(state, args.baseline_candidate))
