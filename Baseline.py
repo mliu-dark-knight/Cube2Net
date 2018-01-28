@@ -36,7 +36,7 @@ class Baseline(object):
 	def random_baseline(self, state):
 		actions = set(list(np.random.choice(len(self.cube.id_to_cell), self.params.trajectory_length, replace=False)))
 		final = state | actions
-		return self.cube.total_reward([self.cube.id_to_cell[id] for id in final], self.params.measure)
+		return self.cube.total_reward(final, self.params.measure)
 
 	def greedy_worker(self, state, candidates, num_worker, worker_id, queue):
 		local_queue = []
@@ -44,7 +44,7 @@ class Baseline(object):
 			if cell_id not in state and idx % num_worker == worker_id:
 				state_copy = deepcopy(state)
 				state_copy.add(cell_id)
-				local_queue.append((state_copy, self.cube.total_reward([self.cube.id_to_cell[id] for id in state_copy], self.params.measure)))
+				local_queue.append((state_copy, self.cube.total_reward(state_copy, self.params.measure)))
 		if len(local_queue) > 0:
 			queue.put(max(local_queue, key=lambda e: e[1]))
 
@@ -78,7 +78,7 @@ class Baseline(object):
 				pair = queue.get()
 				nexts.append(pair)
 			next = max(nexts, key=lambda e: e[1])[0]
-		return self.cube.total_reward([self.cube.id_to_cell[id] for id in next], self.params.measure)
+		return self.cube.total_reward(next, self.params.measure)
 
 
 if __name__ == '__main__':

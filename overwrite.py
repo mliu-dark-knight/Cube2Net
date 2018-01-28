@@ -24,9 +24,11 @@ class Cube(object):
 			for venue, author_v in self.cell_venue.items():
 				for year, author_y in self.cell_year.items():
 					author_c = set.intersection(author_t, author_v, author_y)
-					if len(author_c) >= 50:
+					if len(author_c) >= 100:
 						cell = (topic, venue, year)
 						self.id_to_cell.append(cell)
+
+		self.id_to_author = [None for i in self.id_to_cell]
 
 if __name__ == '__main__':
 	with open('data/step3.pkl', 'rb') as f:
