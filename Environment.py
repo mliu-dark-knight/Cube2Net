@@ -31,13 +31,13 @@ class Environment(object):
 		self.cell_embed = np.array(cell_embed)
 
 	def initial_state(self):
-		return self.cube.initial_state(self.params.test_file, self.params.intersect_threshold)
+		return self.cube.initial_state(self.params.test_file, self.params.intersect_threshold, self.params.debug)
 
 	def state_embed(self, state):
 		return np.mean(self.cell_embed[state], axis=0)
 
 	def total_reward(self, state):
-		return self.cube.total_reward(state, self.params.measure)
+		return self.cube.total_reward([self.cube.id_to_cell[id] for id in state], self.params.measure)
 
 	def reward_multiprocessing(self, state_embeds, initial_states, actions):
 		def worker(worker_id):

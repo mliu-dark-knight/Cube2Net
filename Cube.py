@@ -1,14 +1,17 @@
 import itertools
 import pickle
 import networkx as nx
+import numpy as np
 
 
 class Cube(object):
-	def initial_state(self, path, threshold):
+	def initial_state(self, path, threshold, debug=False):
+		if debug:
+			return set(list(np.random.choice(len(self.id_to_cell), 10, replace=False)))
 		authors = set()
 		with open(path) as f:
 			for line in f:
-				authors.add(line.rstrip().split('\t')[0])
+				authors.add(line.rstrip().split('\t')[0].replace('_', ' '))
 		ids = []
 		for id, cell in enumerate(self.id_to_cell):
 			if len(self.cell_authors(cell) & authors) > threshold:

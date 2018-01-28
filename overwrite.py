@@ -1,5 +1,5 @@
 import pickle
-import re
+
 
 class DblpCube(object):
 	pass
@@ -24,7 +24,7 @@ class Cube(object):
 			for venue, author_v in self.cell_venue.items():
 				for year, author_y in self.cell_year.items():
 					author_c = set.intersection(author_t, author_v, author_y)
-					if len(author_c) >= 10:
+					if len(author_c) >= 50:
 						cell = (topic, venue, year)
 						self.id_to_cell.append(cell)
 
@@ -32,4 +32,5 @@ if __name__ == '__main__':
 	with open('data/step3.pkl', 'rb') as f:
 		dblp = pickle.load(f)
 	cube = Cube(dblp)
+	print(len(cube.id_to_cell))
 	pickle.dump(cube, open('data/cube.pkl', 'wb'))
