@@ -67,7 +67,7 @@ class PPO(object):
 	# the number of trajectories sampled is equal to batch size
 	def collect_trajectory(self, sess):
 		ret_states = []
-		initial_states = [self.environment.initial_state()] * self.params.batch_size
+		initial_states = [self.environment.init_state] * self.params.batch_size
 		batch_states = [deepcopy(state) for state in initial_states]
 		feed_state = np.array([self.environment.state_embed(list(s)) for s in batch_states])
 		batch_actions = []

@@ -10,8 +10,8 @@ class Cube(object):
 			for line in f:
 				authors.add(line.rstrip().split('\t')[0])
 		ids = []
-		for id, cell_authors in self.id_to_author.items():
-			if len(cell_authors & authors) > threshold:
+		for id, cell in enumerate(self.id_to_cell):
+			if len(self.cell_authors(cell) & authors) > threshold:
 				ids.append(id)
 		return set(ids)
 
@@ -38,21 +38,23 @@ class Cube(object):
 		rewards = [total - r for r in rewards]
 		return rewards[:-1]
 
+	def cell_authors(self, cell):
+		t, v, y = cell
+		return set.intersection(self.cell_topic[t], self.cell_venue[v], self.cell_year[y])
+
 	# mutate G
 	def add_cell(self, G, cell):
-		v, y = cell
-		papers = self.cell_venue[v] & self.cell_year[y]
-		for paper in papers:
-			for pair in itertools.combinations(self.paper_author[paper], 2):
-				G.add_edge(pair[0], pair[1])
+		author_c = self.cell_authors(cell)
+		for author_p in self.paper_author:
+			authors = author_p & author_c
+			if bool(authors):
+				for pair in itertools.combinations(authors, 2):
+					G.add_edge(pair[0], pair[1])
 
 	def total_reward(self, state, func):
 		G = nx.Graph()
-		for v, y in state:
-			papers = self.cell_venue[v] & self.cell_year[y]
-			for paper in papers:
-				for pair in itertools.combinations(self.paper_author[paper], 2):
-					G.add_edge(pair[0], pair[1])
+		for cell in state:
+			self.add_cell(G, cell)
 		return getattr(nx, func)(G)
 
 

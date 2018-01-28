@@ -1,26 +1,32 @@
 import numpy as np
+import util
 from copy import deepcopy
 from multiprocessing import *
-from common.Cube import Cube
-from common.config import *
+from Cube import Cube
+from config import *
 
 
 class Baseline(object):
 	def __init__(self, params):
 		self.params = params
 		self.cube = Cube.load_cube(args.cube_file)
-		self.load_embed()
+		self.cell_embed = util.load_embed(params, self.cube)
 
 	def load_embed(self):
-		v_embed = {}
+		t_embed, v_embed = {}, {}
 		with open(self.params.venue_file) as f:
 			for line in f:
 				line = line.rstrip().split('\t')
 				v_embed[line[0]] = np.array(map(float, line[1].split()))
+		with open(self.params.topic_file) as f:
+			for line in f:
+				line = line.rstrip().split('\t')
+				t_embed[line[0]] = np.array(map(float, line[1].split()))
 		cell_embed = []
 		for id in range(len(self.cube.id_to_cell)):
 			cell = self.cube.id_to_cell[id]
-			cell_embed.append(np.insert(v_embed[cell[0]], 0, -0.5 + float(cell[1] - self.params.start_year)
+			concat = np.concatenate(t_embed[cell[0], v_embed[cell[1]]])
+			cell_embed.append(np.insert(concat, 0, -0.5 + float(cell[2] - self.params.start_year)
 			                            / float(self.params.end_year - self.params.start_year)))
 		self.cell_embed = np.array(cell_embed)
 
