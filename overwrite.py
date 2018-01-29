@@ -6,29 +6,39 @@ class DblpCube(object):
 
 class Cube(object):
 	def __init__(self, cube):
-		self.cell_venue = {}
-		self.cell_year = {}
-		self.cell_topic = {}
-		self.paper_author = cube.paper_author
-		for idx, authors in enumerate(cube.cell_topic):
-			self.cell_topic[idx] = authors
-		for idx, authors in enumerate(cube.cell_venue):
-			self.cell_venue[idx] = authors
+		topic_author, venue_author, year_author = {}, {}, {}
+		topic_link, venue_link, year_link = {}, {}, {}
+		for idx, authors in enumerate(cube.topic_author):
+			topic_author[idx] = authors
+		for idx, authors in enumerate(cube.venue_author):
+			venue_author[idx] = authors
 		with open('data/year_name.txt') as f:
 			for idx, line in enumerate(f):
-				self.cell_year[int(line.rstrip())] = cube.cell_year[idx]
+				year_author[int(line.rstrip())] = cube.year_author[idx]
+
+		for idx, authors in enumerate(cube.topic_link):
+			topic_link[idx] = set([tuple(pair.split(',')) for pair in authors.keys()])
+		for idx, authors in enumerate(cube.venue_link):
+			venue_link[idx] = set([tuple(pair.split(',')) for pair in authors.keys()])
+		with open('data/year_name.txt') as f:
+			for idx, line in enumerate(f):
+				year_link[int(line.rstrip())] = set([tuple(pair.split(',')) for pair in cube.year_link[idx].keys()])
 
 		self.id_to_cell = []
-		for topic, author_t in self.cell_topic.items():
+		self.id_to_author = []
+		self.id_to_link = []
+		for topic, author_t in topic_author.items():
 			print(topic)
-			for venue, author_v in self.cell_venue.items():
-				for year, author_y in self.cell_year.items():
+			for venue, author_v in venue_author.items():
+				for year, author_y in year_author.items():
 					author_c = set.intersection(author_t, author_v, author_y)
 					if len(author_c) >= 100:
 						cell = (topic, venue, year)
 						self.id_to_cell.append(cell)
+						self.id_to_author.append(author_c)
+						link_c = set.intersection(topic_link[topic], venue_link[venue], year_link[year])
+						self.id_to_link.append(link_c)
 
-		self.id_to_author = [None for i in self.id_to_cell]
 
 if __name__ == '__main__':
 	with open('data/step3.pkl', 'rb') as f:

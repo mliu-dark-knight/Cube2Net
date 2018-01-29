@@ -14,9 +14,15 @@ class Cube(object):
 				authors.add(line.rstrip().split('\t')[0].replace('_', ' '))
 		ids = []
 		for id, _ in enumerate(self.id_to_cell):
-			if len(self.cell_authors(id) & authors) > threshold:
+			if len(self.id_to_author[id] & authors) > threshold:
 				ids.append(id)
 		return set(ids)
+
+	def all_authors(self, state):
+		authors = set()
+		for id in state:
+			authors |= self.id_to_author[id]
+		return authors
 
 	# compute reward to go
 	def trajectory_reward(self, state, actions, func):
@@ -32,22 +38,10 @@ class Cube(object):
 		rewards = [total - r for r in rewards]
 		return rewards[:-1]
 
-	def cell_authors(self, id):
-		if self.id_to_author[id] is None:
-			t, v, y = self.id_to_cell[id]
-			authors = set.intersection(self.cell_topic[t], self.cell_venue[v], self.cell_year[y])
-			self.id_to_author[id] = authors
-			return authors
-		return self.id_to_author[id]
-
 	# mutate G
 	def add_cell(self, G, cell):
-		author_c = self.cell_authors(cell)
-		for author_p in self.paper_author:
-			authors = author_p & author_c
-			if bool(authors):
-				for pair in itertools.combinations(authors, 2):
-					G.add_edge(pair[0], pair[1])
+		for pair in self.id_to_link[cell]:
+			G.add_edge(pair[0], pair[1])
 
 	def total_reward(self, state, func):
 		G = nx.Graph()

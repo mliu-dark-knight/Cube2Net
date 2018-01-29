@@ -36,7 +36,7 @@ class Baseline(object):
 	def random_baseline(self, state):
 		actions = set(list(np.random.choice(len(self.cube.id_to_cell), self.params.trajectory_length, replace=False)))
 		final = state | actions
-		return self.cube.total_reward(final, self.params.measure)
+		return self.cube.all_authors(final), self.cube.total_reward(final, self.params.measure)
 
 	def greedy_worker(self, state, candidates, num_worker, worker_id, queue):
 		local_queue = []
@@ -78,12 +78,16 @@ class Baseline(object):
 				pair = queue.get()
 				nexts.append(pair)
 			next = max(nexts, key=lambda e: e[1])[0]
-		return self.cube.total_reward(next, self.params.measure)
+		return self.cube.all_authors(next), self.cube.total_reward(next, self.params.measure)
 
 
 if __name__ == '__main__':
 	baseline = Baseline(args)
 	state = baseline.initial_state()
-	print('random baseline: %f' % baseline.random_baseline(state))
-	print('greedy embedding baseline: %f' % baseline.greedy_baseline(state, args.baseline_candidate, embedding=True))
-	print('greedy baseline: %f' % baseline.greedy_baseline(state, args.baseline_candidate))
+	print(len(state))
+	_, reward = baseline.random_baseline(state)
+	print('random baseline: %f' % reward)
+	_, reward = baseline.greedy_baseline(state, args.baseline_candidate, embedding=True)
+	print('greedy embedding baseline: %f' % reward)
+	_, reward = baseline.greedy_baseline(state, args.baseline_candidate)
+	print('greedy baseline: %f' % reward)

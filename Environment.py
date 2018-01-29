@@ -66,5 +66,7 @@ class Environment(object):
 
 
 	def trajectory_reward(self, state, actions):
-		state = set([self.cube.id_to_cell[id] for id in state])
 		return self.cube.trajectory_reward(state, actions, self.params.measure)
+
+	def convert_state(self, state):
+		return self.cube.all_authors(state)

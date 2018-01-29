@@ -14,7 +14,7 @@ def parse_args():
 	parser.add_argument('--c_value', type=float, default=1.0, help='Coefficient for value function loss')
 	parser.add_argument('--batch_size', type=int, default=4, help='Number of trajectories sampled')
 	parser.add_argument('--trajectory_length', type=int, default=2, help=None)
-	parser.add_argument('--epoch', type=int, default=1, help=None)
+	parser.add_argument('--epoch', type=int, default=4, help=None)
 	parser.add_argument('--step', type=int, default=2, help=None)
 	parser.add_argument('--intersect_threshold', type=int, default=100, help='High value may cause an error')
 	parser.add_argument('--start_year', type=int, default=1954, help=None)

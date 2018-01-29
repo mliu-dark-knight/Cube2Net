@@ -8,5 +8,5 @@ if __name__ == '__main__':
 	agent = PPO(args, environment)
 	with tf.Session() as sess:
 		agent.train(sess)
-		reward = agent.plan(sess)
+		_, reward = agent.plan(sess)
 		print('total reward: %f' % reward)

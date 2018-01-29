@@ -101,4 +101,4 @@ class PPO(object):
 			feed_state = np.expand_dims(self.environment.state_embed(list(state)), axis=0)
 			action = sess.run(self.decision, feed_dict={self.state: feed_state})
 			state.add(action[0])
-		return self.environment.total_reward(state)
+		return self.environment.convert_state(state), self.environment.total_reward(state)
