@@ -84,7 +84,6 @@ class Baseline(object):
 if __name__ == '__main__':
 	baseline = Baseline(args)
 	state = baseline.initial_state()
-	print(len(state))
 	_, reward = baseline.random_baseline(state)
 	print('random baseline: %f' % reward)
 	_, reward = baseline.greedy_baseline(state, args.baseline_candidate, embedding=True)
